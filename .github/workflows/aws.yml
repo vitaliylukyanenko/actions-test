@@ -2,7 +2,7 @@ on:
   release:
     types: [created]
 
-name: Deploy to ECR
+name: Nginx test deployment
 
 jobs:
   ci:
