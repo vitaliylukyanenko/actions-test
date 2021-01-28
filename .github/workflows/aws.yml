@@ -36,18 +36,19 @@ jobs:
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
   deployment:
-    runs-on: 'ubuntu-latest'
+    name: Kubernetes deploy
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - name: Prep helm chart
-      run: |
-        mv ./.helm/app/Chart.yaml ./.helm/app/Chart.old.yaml &&
-        cat ./.helm/app/Chart.old.yaml | grep -v appVersion > ./.helm/app/Chart.yaml &&
-        echo -e "\r\nappVersion: v${GITHUB_REF##*/}\r\n" >> ./.helm/app/Chart.yaml &&
-        cat ./.helm/app/Chart.yaml
+        run: |
+          mv ./.helm/app/Chart.yaml ./.helm/app/Chart.old.yaml &&
+          cat ./.helm/app/Chart.old.yaml | grep -v appVersion > ./.helm/app/Chart.yaml &&
+          echo -e "\r\nappVersion: v${GITHUB_REF##*/}\r\n" >> ./.helm/app/Chart.yaml &&
+          cat ./.helm/app/Chart.yaml
         
-    - name: Deploy
-      uses: WyriHaximus/github-action-helm3@v2
-      with:
-        exec: helm upgrade nginx-test ./.helm/app/ --install --wait --atomic --namespace=default --set=app.name=nginx-test --values=./.helm/app/values.yaml --set=image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        kubeconfig: '${{ secrets.KUBECONFIG }}'
+      - name: Deploy
+        uses: WyriHaximus/github-action-helm3@v2
+        with:
+          exec: helm upgrade nginx-test ./.helm/app/ --install --wait --atomic --namespace=default --set=app.name=nginx-test --values=./.helm/app/values.yaml --set=image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          kubeconfig: '${{ secrets.KUBECONFIG }}'
