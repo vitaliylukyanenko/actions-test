@@ -1,13 +1,12 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: {{ .Values.app_name }}-ingress-alb
+  name: {{ .Values.app_name }}-ingress-nginx
   namespace: {{ .Values.app_namespace }}
   labels:
     app: {{ .Values.app_name }}
   annotations:
     kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: "letsencrypt"
 spec:
   rules:
   - host: {{ .Values.ingress.main_domain }}
@@ -28,7 +27,7 @@ spec:
   - hosts:
     - {{ .Values.ingress.main_domain }}
     - {{ .Values.ingress.additional_domain }}
-    secretName: ecom-tls
+    secretName: nginx-tls
 ---
 apiVersion: v1
 kind: Service
