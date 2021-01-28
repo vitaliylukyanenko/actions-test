@@ -1,0 +1,44 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Values.app_name }}-ingress-alb
+  namespace: {{ .Values.app_namespace }}
+  labels:
+    app: {{ .Values.app_name }}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt"
+spec:
+  rules:
+  - host: {{ .Values.ingress.main_domain }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ .Values.app_name }}
+          servicePort: {{ .Values.ingress.port }}
+        path: /
+  - host: {{ .Values.ingress.additional_domain }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ .Values.app_name }}
+          servicePort: {{ .Values.ingress.port }}
+        path: /
+  tls:
+  - hosts:
+    - {{ .Values.ingress.main_domain }}
+    - {{ .Values.ingress.additional_domain }}
+    secretName: ecom-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.app_name }}
+  namespace: {{ .Values.app_namespace }}
+spec:
+  type: NodePort
+  ports:
+  - targetPort: {{ .Values.ingress.port }}
+    port: {{ .Values.ingress.port }}
+  selector:
+    app: {{ .Values.app_name }}

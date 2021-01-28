@@ -2,7 +2,7 @@ on:
   release:
     types: [created]
 
-name: Deploy to Amazon ECS
+name: Deploy to ECR
 
 jobs:
   deploy:
@@ -31,25 +31,20 @@ jobs:
         ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPO }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build a docker container and
-        # push it to ECR so that it can
-        # be deployed to ECS.
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: task-definition.json
-        container-name: sample-app
-        image: ${{ steps.build-image.outputs.image }}
+    - name: Prep helm chart
+      uses: actions/checkout@v1
+      run: |
+        mv ./.helm/app/Chart.yaml ./.helm/app/Chart.old.yaml &&
+        cat ./.helm/app/Chart.old.yaml | grep -v appVersion > ./.helm/app/Chart.yaml &&
+        echo -e "\r\nappVersion: v${GITHUB_REF##*/}\r\n" >> ./.helm/app/Chart.yaml &&
+        cat ./.helm/app/Chart.yaml
 
-    - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+    - name: Deploy
+      uses: WyriHaximus/github-action-helm3@v2
       with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: sample-app-service
-        cluster: default
-        wait-for-service-stability: true
+        exec: helm upgrade nginx-test ./.helm/app/ --install --wait --atomic --namespace=default --set=app.name=APP_NAME --values=./.helm/app/values.yaml --set=image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        kubeconfig: '${{ secrets.KUBECONFIG }}'
