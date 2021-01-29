@@ -10,7 +10,8 @@ name: Nginx test deployment
 
 jobs:   
   printInputs:
-    environment: Dev
+    environment: 
+      name: ${{ github.event.inputs.ENV }}
     runs-on: ubuntu-latest
     steps:
     - run: |
