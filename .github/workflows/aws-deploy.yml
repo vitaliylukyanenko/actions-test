@@ -1,14 +1,10 @@
 on:
-  release:
-    types: [created]
   workflow_dispatch:
     inputs:
-      logLevel:
-        description: 'Log level'     
+      ENV:
+        description: 'ENV name Prod/Dev'     
         required: true
-        default: 'warning'
-      tags:
-        description: 'Test scenario tags'
+        default: 'Dev'
         
 name: Nginx test deployment
 
@@ -46,7 +42,7 @@ jobs:
   deployment:
     name: Kubernetes deploy
     runs-on: ubuntu-latest
-    environment: Prod
+    environment: ${{ github.event.inputs.ENV }}
     steps:
       - uses: actions/checkout@v1
       - name: Prep helm chart
@@ -59,6 +55,12 @@ jobs:
         
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v2
-        with:
-          exec: helm upgrade nginx-test ./.helm/app/ --install --wait --atomic --namespace=default --set=app.name=nginx-test --values=./.helm/app/values.yaml --set=image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          kubeconfig: '${{ secrets.KUBECONFIG }}'
+        run: |
+          echo "Deploy with kubeconf"
+          echo ${{ secrets.KUBECONFIG }}
+          echo "Env name is:"
+          echo "Tags: ${{ github.event.inputs.ENV }}" 
+          
+#        with:
+#          exec: helm upgrade nginx-test ./.helm/app/ --install --wait --atomic --namespace=default --set=app.name=nginx-test --values=./.helm/app/values.yaml --set=image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+#          kubeconfig: '${{ secrets.KUBECONFIG }}'
