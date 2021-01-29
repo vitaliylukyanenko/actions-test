@@ -49,7 +49,6 @@ jobs:
   deployment:
     name: Kubernetes deploy
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.ENV }}
     steps:
       - uses: actions/checkout@v1
       - name: Prep helm chart
