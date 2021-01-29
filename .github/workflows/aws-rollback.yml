@@ -20,5 +20,5 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v2
         with:
-          exec: helm delete nginx-test --wait --atomic --namespace=default
+          exec: helm delete nginx-test --namespace=default
           kubeconfig: '${{ secrets.KUBECONFIG }}'
