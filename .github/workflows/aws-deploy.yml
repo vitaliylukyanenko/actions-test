@@ -8,7 +8,15 @@ on:
         
 name: Nginx test deployment
 
-jobs:
+
+jobs:   
+  printInputs:
+    runs-on: ubuntu-latest
+    steps:
+    - run: |
+        echo "Environment name: ${{ github.event.inputs.ENV }}"
+        echo "Kubeconfig: ${{ secrets.KUBECONFIG }}" 
+        
   ci:
     name: Build
     runs-on: ubuntu-latest
@@ -38,7 +46,7 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-
+      
   deployment:
     name: Kubernetes deploy
     runs-on: ubuntu-latest
@@ -51,16 +59,9 @@ jobs:
           cat ./.helm/app/Chart.old.yaml | grep -v appVersion > ./.helm/app/Chart.yaml &&
           echo -e "\r\nappVersion: v${GITHUB_REF##*/}\r\n" >> ./.helm/app/Chart.yaml &&
           cat ./.helm/app/Chart.yaml
-          cat ${{ secrets.KUBECONFIG }}
         
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v2
-        run: |
-          echo "Deploy with kubeconf"
-          echo ${{ secrets.KUBECONFIG }}
-          echo "Env name is:"
-          echo "Tags: ${{ github.event.inputs.ENV }}" 
-          
-#        with:
-#          exec: helm upgrade nginx-test ./.helm/app/ --install --wait --atomic --namespace=default --set=app.name=nginx-test --values=./.helm/app/values.yaml --set=image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-#          kubeconfig: '${{ secrets.KUBECONFIG }}'
+        with:
+          exec: helm upgrade nginx-test ./.helm/app/ --install --wait --atomic --namespace=default --set=app.name=nginx-test --values=./.helm/app/values.yaml --set=image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          kubeconfig: '${{ secrets.KUBECONFIG }}'
