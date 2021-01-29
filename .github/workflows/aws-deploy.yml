@@ -1,7 +1,15 @@
 on:
   release:
     types: [created]
-
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'     
+        required: true
+        default: 'warning'
+      tags:
+        description: 'Test scenario tags'
+        
 name: Nginx test deployment
 
 jobs:
@@ -38,6 +46,7 @@ jobs:
   deployment:
     name: Kubernetes deploy
     runs-on: ubuntu-latest
+    environment: Prod
     steps:
       - uses: actions/checkout@v1
       - name: Prep helm chart
@@ -46,6 +55,7 @@ jobs:
           cat ./.helm/app/Chart.old.yaml | grep -v appVersion > ./.helm/app/Chart.yaml &&
           echo -e "\r\nappVersion: v${GITHUB_REF##*/}\r\n" >> ./.helm/app/Chart.yaml &&
           cat ./.helm/app/Chart.yaml
+          cat ${{ secrets.KUBECONFIG }}
         
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v2
