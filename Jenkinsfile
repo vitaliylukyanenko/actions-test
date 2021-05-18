@@ -10,7 +10,7 @@ agent any
         steps{
             echo "Checking out the code from the repo"
             script{
-               checkout([$class: 'GitSCM', branches: [[name: main]],
+               checkout([$class: 'GitSCM', branches: [[name: "main"]],
                userRemoteConfigs: [[url: githubRepoUrl, credentialsId: githubCredentials]]])
               }
             }
