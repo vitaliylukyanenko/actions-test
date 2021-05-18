@@ -8,13 +8,6 @@ agent any
   stages {
     stage('Checkout') {
         steps{
-            echo "Checking out the code from the repo"
-            script{
-               checkout([$class: 'GitSCM', branches: [[name: "main"]],
-               userRemoteConfigs: [[url: githubRepoUrl, credentialsId: githubCredentials]]])
-              }
-            }
-        }
             stage('Get changes') {
                 steps{
                     echo "Checking out the code from the repo"
